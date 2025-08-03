@@ -1,0 +1,8 @@
+# Archivos a ignorar en el frontend
+node_modules/
+.git/
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+*.log

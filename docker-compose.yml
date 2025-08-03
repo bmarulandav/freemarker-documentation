@@ -1,0 +1,68 @@
+version: '3.8'
+
+services:
+  # Servicio del Backend
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: freemarker-backend
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - MONGODB_URI=${MONGODB_URI}
+      - FRONTEND_URL=http://localhost:3000
+    networks:
+      - freemarker-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/api/health"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+      start_period: 40s
+
+  # Servicio del Frontend
+  frontend:
+    build:
+      context: ./frontend-new
+      dockerfile: Dockerfile
+    container_name: freemarker-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    networks:
+      - freemarker-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      timeout: 10s
+      retries: 3
+      interval: 30s
+
+networks:
+  freemarker-network:
+    driver: bridge
+
+# Opcional: Si quisieras usar MongoDB local en lugar de Atlas
+# volumes:
+#   mongodb_data:
+#
+# services:
+#   mongodb:
+#     image: mongo:7.0
+#     container_name: freemarker-mongodb
+#     restart: unless-stopped
+#     ports:
+#       - "27017:27017"
+#     environment:
+#       MONGO_INITDB_ROOT_USERNAME: admin
+#       MONGO_INITDB_ROOT_PASSWORD: password123
+#       MONGO_INITDB_DATABASE: freemarker-docs
+#     volumes:
+#       - mongodb_data:/data/db
+#     networks:
+#       - freemarker-network
