@@ -60,23 +60,39 @@ console.log('📍 URI configurada:', process.env.MONGODB_URI ? 'SÍ' : 'NO');
 console.log('📍 URI preview:', process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 30) + '...' : 'undefined');
 
 const mongoOptions = {
-  serverSelectionTimeoutMS: 5000, // Timeout después de 5s en lugar de 30s
-  socketTimeoutMS: 45000, // Cerrar sockets después de 45s de inactividad
+  serverSelectionTimeoutMS: 10000, // 10 segundos para seleccionar servidor
+  socketTimeoutMS: 45000, // Cerrar sockets después de 45s de inactividad  
   family: 4, // Usar IPv4, evitar problemas IPv6
-  bufferCommands: false, // Deshabilitar mongoose buffering
-  bufferMaxEntries: 0 // Deshabilitar mongoose buffering
+  bufferCommands: true, // Habilitar buffering para evitar errores de conexión
+  bufferMaxEntries: 0, // Sin límite de buffer
+  maxPoolSize: 10, // Mantener hasta 10 conexiones de socket
+  serverSelectionTimeoutMS: 5000, // Timeout para seleccionar servidor
+  heartbeatFrequencyMS: 2000, // Frequency of heartbeat
+  maxIdleTimeMS: 30000 // Close connections after 30 seconds of inactivity
 };
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/freemarker-docs', mongoOptions)
-.then(() => {
-  console.log('✅ Conectado a MongoDB exitosamente');
-  console.log('🗄️ Base de datos:', mongoose.connection.name);
-})
-.catch(err => {
-  console.error('❌ Error conectando a MongoDB:', err.message);
-  console.error('💡 Verifica tu conexión a internet y las credenciales de MongoDB Atlas');
-  console.error('🔍 MongoDB URI está configurada:', process.env.MONGODB_URI ? 'SÍ' : 'NO');
-});
+const connectDB = async () => {
+  try {
+    console.log('🔌 Intentando conectar a MongoDB...');
+    console.log('📍 URI configurada:', process.env.MONGODB_URI ? 'SÍ' : 'NO');
+    console.log('📍 URI preview:', process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 30) + '...' : 'undefined');
+    
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/freemarker-docs', mongoOptions);
+    
+    console.log('✅ Conectado a MongoDB exitosamente');
+    console.log('🗄️ Base de datos:', mongoose.connection.name);
+  } catch (error) {
+    console.error('❌ Error conectando a MongoDB:', error.message);
+    console.error('💡 Verifica tu conexión a internet y las credenciales de MongoDB Atlas');
+    console.error('🔍 MongoDB URI está configurada:', process.env.MONGODB_URI ? 'SÍ' : 'NO');
+    
+    // Reintentar conexión después de 5 segundos
+    setTimeout(connectDB, 5000);
+  }
+};
+
+// Iniciar conexión
+connectDB();
 
 // Importar rutas
 const exampleRoutes = require('./routes/examples');
