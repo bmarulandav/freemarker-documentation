@@ -1,7 +1,6 @@
-# Netlify Configuration
+# Netlify Configuration - Static Site
 [build]
-  base = "frontend-new/public"
-  publish = "."
+  publish = "frontend-new/public"
   
 [[redirects]]
   from = "/*"
