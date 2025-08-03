@@ -56,9 +56,18 @@ app.use(morgan('combined'));
 
 // Conexión a MongoDB
 console.log('🔌 Intentando conectar a MongoDB...');
-console.log('📍 URI:', process.env.MONGODB_URI ? 'MongoDB Atlas configurado' : 'URI no configurada');
+console.log('📍 URI configurada:', process.env.MONGODB_URI ? 'SÍ' : 'NO');
+console.log('📍 URI preview:', process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 30) + '...' : 'undefined');
 
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/freemarker-docs')
+const mongoOptions = {
+  serverSelectionTimeoutMS: 5000, // Timeout después de 5s en lugar de 30s
+  socketTimeoutMS: 45000, // Cerrar sockets después de 45s de inactividad
+  family: 4, // Usar IPv4, evitar problemas IPv6
+  bufferCommands: false, // Deshabilitar mongoose buffering
+  bufferMaxEntries: 0 // Deshabilitar mongoose buffering
+};
+
+mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/freemarker-docs', mongoOptions)
 .then(() => {
   console.log('✅ Conectado a MongoDB exitosamente');
   console.log('🗄️ Base de datos:', mongoose.connection.name);
@@ -66,6 +75,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/freemarke
 .catch(err => {
   console.error('❌ Error conectando a MongoDB:', err.message);
   console.error('💡 Verifica tu conexión a internet y las credenciales de MongoDB Atlas');
+  console.error('🔍 MongoDB URI está configurada:', process.env.MONGODB_URI ? 'SÍ' : 'NO');
 });
 
 // Importar rutas
@@ -79,30 +89,54 @@ app.get('/api/debug', async (req, res) => {
     const Example = require('./models/Example');
     const Category = require('./models/Category');
     
-    const exampleCount = await Example.countDocuments();
-    const categoryCount = await Category.countDocuments();
-    const publishedExamples = await Example.countDocuments({ isPublished: true });
-    
-    // Obtener algunos ejemplos de muestra
-    const sampleExamples = await Example.find().limit(3).select('title slug difficulty category');
+    // Información detallada del entorno
+    const debugInfo = {
+      environment: process.env.NODE_ENV || 'development',
+      mongoUri: process.env.MONGODB_URI ? 'SET' : 'NOT SET',
+      mongoUriPreview: process.env.MONGODB_URI ? process.env.MONGODB_URI.substring(0, 20) + '...' : 'undefined',
+      mongoConnectionState: mongoose.connection.readyState,
+      mongoConnectionStates: {
+        0: 'disconnected',
+        1: 'connected', 
+        2: 'connecting',
+        3: 'disconnecting'
+      },
+      databaseName: mongoose.connection.name || 'undefined'
+    };
+
+    // Intentar contar documentos solo si está conectado
+    if (mongoose.connection.readyState === 1) {
+      const exampleCount = await Example.countDocuments();
+      const categoryCount = await Category.countDocuments();
+      const publishedExamples = await Example.countDocuments({ isPublished: true });
+      const sampleExamples = await Example.find().limit(3).select('title slug difficulty category');
+      
+      debugInfo.totalExamples = exampleCount;
+      debugInfo.totalCategories = categoryCount;
+      debugInfo.publishedExamples = publishedExamples;
+      debugInfo.sampleExamples = sampleExamples;
+    } else {
+      debugInfo.note = 'Database not connected, skipping queries';
+    }
     
     res.json({
       success: true,
-      debug: {
-        totalExamples: exampleCount,
-        totalCategories: categoryCount,
-        publishedExamples: publishedExamples,
-        sampleExamples: sampleExamples,
-        mongoConnection: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-        databaseName: mongoose.connection.name
-      }
+      debug: debugInfo
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       error: error.message,
       debug: {
-        mongoConnection: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+        environment: process.env.NODE_ENV || 'development',
+        mongoUri: process.env.MONGODB_URI ? 'SET' : 'NOT SET',
+        mongoConnectionState: mongoose.connection.readyState,
+        mongoConnectionStates: {
+          0: 'disconnected',
+          1: 'connected', 
+          2: 'connecting',
+          3: 'disconnecting'
+        }
       }
     });
   }
