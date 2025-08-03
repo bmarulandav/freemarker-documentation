@@ -19,11 +19,24 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:5000', 
   'https://688f107b756f329d43a50df8--shiny-toffee-e9e38e.netlify.app',
+  'https://shiny-toffee-e9e38e.netlify.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
+console.log('🌐 CORS configurado para:', allowedOrigins);
+
 app.use(cors({
-  origin: allowedOrigins,
+  origin: function (origin, callback) {
+    // Permitir requests sin origin (ej: mobile apps, Postman)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('❌ CORS bloqueado para:', origin);
+      callback(new Error('No permitido por CORS'));
+    }
+  },
   credentials: true
 }));
 
