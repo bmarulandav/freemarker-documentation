@@ -13,8 +13,17 @@ const app = express();
 
 // Middleware de seguridad
 app.use(helmet());
+
+// CORS más flexible para desarrollo y producción
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:5000', 
+  'https://688f107b756f329d43a50df8--shiny-toffee-e9e38e.netlify.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: allowedOrigins,
   credentials: true
 }));
 
