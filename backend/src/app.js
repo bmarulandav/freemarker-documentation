@@ -73,7 +73,42 @@ const exampleRoutes = require('./routes/examples');
 const categoryRoutes = require('./routes/categories');
 const authRoutes = require('./routes/auth');
 
-// Rutas de la API
+// Endpoint de diagnóstico
+app.get('/api/debug', async (req, res) => {
+  try {
+    const Example = require('./models/Example');
+    const Category = require('./models/Category');
+    
+    const exampleCount = await Example.countDocuments();
+    const categoryCount = await Category.countDocuments();
+    const publishedExamples = await Example.countDocuments({ isPublished: true });
+    
+    // Obtener algunos ejemplos de muestra
+    const sampleExamples = await Example.find().limit(3).select('title slug difficulty category');
+    
+    res.json({
+      success: true,
+      debug: {
+        totalExamples: exampleCount,
+        totalCategories: categoryCount,
+        publishedExamples: publishedExamples,
+        sampleExamples: sampleExamples,
+        mongoConnection: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+        databaseName: mongoose.connection.name
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      debug: {
+        mongoConnection: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected'
+      }
+    });
+  }
+});
+
+// Rutas principales
 app.use('/api/examples', exampleRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/auth', authRoutes);
