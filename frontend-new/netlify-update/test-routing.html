@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Routing</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .nav { margin-bottom: 20px; }
+        .nav a { margin-right: 10px; padding: 10px; background: #007bff; color: white; text-decoration: none; }
+        .nav a:hover { background: #0056b3; }
+        #content { padding: 20px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+    <h1>Test de Rutas</h1>
+    <div class="nav">
+        <a href="/" onclick="navigate('/')">Home</a>
+        <a href="/examples" onclick="navigate('/examples')">Examples</a>
+        <a href="/ejemplos" onclick="navigate('/ejemplos')">Ejemplos</a>
+        <a href="/playground" onclick="navigate('/playground')">Playground</a>
+    </div>
+    
+    <div id="content">
+        <p>Contenido inicial</p>
+    </div>
+
+    <script>
+        function navigate(path) {
+            event.preventDefault();
+            window.history.pushState({}, '', path);
+            updateContent(path);
+        }
+
+        function updateContent(path) {
+            const content = document.getElementById('content');
+            switch(path) {
+                case '/':
+                    content.innerHTML = '<h2>✅ Home</h2><p>Página principal funcionando</p>';
+                    break;
+                case '/examples':
+                case '/ejemplos':
+                    content.innerHTML = '<h2>✅ Examples</h2><p>Página de ejemplos funcionando</p>';
+                    testAPI();
+                    break;
+                case '/playground':
+                    content.innerHTML = '<h2>✅ Playground</h2><p>Playground funcionando</p>';
+                    break;
+                default:
+                    content.innerHTML = '<h2>❌ 404</h2><p>Página no encontrada</p>';
+            }
+        }
+
+        async function testAPI() {
+            try {
+                const response = await fetch('http://localhost:5000/api/examples');
+                const result = await response.json();
+                console.log('API Response:', result);
+                
+                const examples = result.data || result;
+                if (Array.isArray(examples)) {
+                    document.getElementById('content').innerHTML += `
+                        <div style="margin-top: 20px; padding: 10px; background: #e7f3e7;">
+                            <h3>✅ API Funcionando</h3>
+                            <p>Ejemplos cargados: ${examples.length}</p>
+                        </div>
+                    `;
+                } else {
+                    document.getElementById('content').innerHTML += `
+                        <div style="margin-top: 20px; padding: 10px; background: #f8d7da;">
+                            <h3>❌ API Error</h3>
+                            <p>Respuesta no es un array</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('API Error:', error);
+                document.getElementById('content').innerHTML += `
+                    <div style="margin-top: 20px; padding: 10px; background: #f8d7da;">
+                        <h3>❌ API Error</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Manejar navegación del navegador
+        window.addEventListener('popstate', () => {
+            updateContent(window.location.pathname);
+        });
+
+        // Cargar contenido inicial
+        updateContent(window.location.pathname);
+    </script>
+</body>
+</html>

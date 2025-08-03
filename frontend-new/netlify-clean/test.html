@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Examples</title>
+</head>
+<body>
+    <h1>Test de Ejemplos</h1>
+    <div id="result">Cargando...</div>
+    
+    <script>
+        console.log('🚀 Iniciando test...');
+        
+        fetch('http://localhost:5000/api/examples')
+            .then(response => {
+                console.log('📡 Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('📦 Data received:', data);
+                const examples = data.data || data;
+                console.log('📋 Examples array:', examples);
+                console.log('📊 Examples length:', examples.length);
+                
+                document.getElementById('result').innerHTML = `
+                    <h2>✅ Success!</h2>
+                    <p>Found ${examples.length} examples</p>
+                    <h3>First example:</h3>
+                    <pre>${JSON.stringify(examples[0], null, 2)}</pre>
+                `;
+            })
+            .catch(error => {
+                console.error('❌ Error:', error);
+                document.getElementById('result').innerHTML = `
+                    <h2>❌ Error</h2>
+                    <p>${error.message}</p>
+                `;
+            });
+    </script>
+</body>
+</html>

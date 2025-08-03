@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Examples</title>
+</head>
+<body>
+    <h1>Debug de Ejemplos</h1>
+    <button onclick="testExamples()">Probar carga de ejemplos</button>
+    <div id="results"></div>
+
+    <script>
+        async function testExamples() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>Cargando...</p>';
+            
+            try {
+                console.log('Haciendo fetch a /api/examples...');
+                const response = await fetch('http://localhost:5000/api/examples');
+                console.log('Respuesta:', response);
+                
+                const result = await response.json();
+                console.log('Resultado JSON:', result);
+                console.log('Tipo de result:', typeof result);
+                console.log('result.data existe:', !!result.data);
+                console.log('Tipo de result.data:', typeof result.data);
+                console.log('result.data es array:', Array.isArray(result.data));
+                
+                const examples = result.data || result;
+                console.log('Examples final:', examples);
+                console.log('Examples es array:', Array.isArray(examples));
+                console.log('Número de ejemplos:', examples.length);
+                
+                if (Array.isArray(examples) && examples.length > 0) {
+                    console.log('Primer ejemplo:', examples[0]);
+                    resultsDiv.innerHTML = `
+                        <h3>✅ Éxito</h3>
+                        <p>Ejemplos cargados: ${examples.length}</p>
+                        <pre>${JSON.stringify(examples[0], null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <h3>❌ Error</h3>
+                        <p>No hay ejemplos o no es un array</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                resultsDiv.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

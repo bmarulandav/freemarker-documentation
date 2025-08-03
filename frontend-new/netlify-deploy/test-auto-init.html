@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Inicialización Automática</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .warning { background: #fff3cd; color: #856404; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .test-button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .logs { background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0; max-height: 300px; overflow-y: auto; font-family: monospace; font-size: 0.9rem; }
+        iframe { width: 100%; height: 500px; border: 1px solid #ddd; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test de Inicialización Automática</h1>
+        <p>Este test verifica que la página principal se cargue automáticamente sin necesidad de hacer clic.</p>
+        
+        <div class="status info">
+            <strong>🔄 Estado:</strong> <span id="status">Preparando test...</span>
+        </div>
+        
+        <button class="test-button" onclick="runTest()">🚀 Ejecutar Test</button>
+        <button class="test-button" onclick="clearLogs()">🗑️ Limpiar Logs</button>
+        
+        <div class="logs" id="logs">
+            <div>📋 Logs aparecerán aquí...</div>
+        </div>
+        
+        <iframe id="testFrame"></iframe>
+    </div>
+
+    <script>
+        let logCount = 0;
+        
+        function log(message, type = 'info') {
+            const logs = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            const colors = {
+                'info': '#0c5460',
+                'success': '#155724',
+                'error': '#721c24',
+                'warning': '#856404'
+            };
+            
+            logs.innerHTML += `<div style="color: ${colors[type]}; margin: 2px 0;">[${timestamp}] ${message}</div>`;
+            logs.scrollTop = logs.scrollHeight;
+            logCount++;
+        }
+        
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '<div>📋 Logs limpiados...</div>';
+            logCount = 0;
+        }
+        
+        function updateStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.parentElement.className = `status ${type}`;
+        }
+        
+        async function runTest() {
+            clearLogs();
+            updateStatus('Ejecutando test...', 'info');
+            
+            log('🚀 Iniciando test de inicialización automática');
+            
+            const frame = document.getElementById('testFrame');
+            
+            // Paso 1: Cargar página con timestamp para evitar cache
+            const url = `http://localhost:3000/?t=${Date.now()}`;
+            log(`📄 Cargando: ${url}`);
+            frame.src = url;
+            
+            // Esperar a que cargue
+            await new Promise(resolve => {
+                frame.onload = () => {
+                    log('✅ Iframe cargado');
+                    resolve();
+                };
+            });
+            
+            // Paso 2: Esperar un poco para que se ejecute el JavaScript
+            log('⏳ Esperando 3 segundos para que se ejecute el JavaScript...');
+            await new Promise(resolve => setTimeout(resolve, 3000));
+            
+            // Paso 3: Verificar contenido
+            try {
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                const appElement = frameDoc.getElementById('app');
+                
+                if (!appElement) {
+                    log('❌ Elemento #app no encontrado', 'error');
+                    updateStatus('Error: Elemento #app no encontrado', 'error');
+                    return;
+                }
+                
+                const appContent = appElement.innerHTML;
+                log(`📏 Contenido del #app: ${appContent.length} caracteres`);
+                
+                // Verificar si contiene el loader inicial o contenido real
+                const hasLoader = appContent.includes('Cargando aplicación');
+                const hasRealContent = appContent.includes('container') && appContent.includes('FreeMarker Documentation');
+                
+                log(`🔍 Análisis de contenido:`);
+                log(`  • Loader inicial: ${hasLoader ? '✅' : '❌'}`);
+                log(`  • Contenido real: ${hasRealContent ? '✅' : '❌'}`);
+                
+                if (hasRealContent) {
+                    log('🎉 ¡ÉXITO! La página se cargó automáticamente', 'success');
+                    updateStatus('Página cargada automáticamente ✅', 'success');
+                } else if (hasLoader) {
+                    log('⚠️ Solo se muestra el loader, el contenido no se cargó automáticamente', 'warning');
+                    updateStatus('Solo loader visible, falta contenido automático', 'warning');
+                    
+                    // Intentar simular click en el logo
+                    log('🔄 Intentando simular click en el logo...');
+                    const navBrand = frameDoc.querySelector('.nav-brand a[data-route="/"]');
+                    if (navBrand) {
+                        navBrand.click();
+                        log('👆 Click simulado en el logo');
+                        
+                        // Esperar y verificar de nuevo
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                        const newContent = frameDoc.getElementById('app').innerHTML;
+                        const nowHasContent = newContent.includes('container') && newContent.includes('FreeMarker Documentation');
+                        
+                        if (nowHasContent) {
+                            log('✅ Después del click manual, el contenido apareció', 'success');
+                            updateStatus('Funciona solo con click manual', 'warning');
+                        } else {
+                            log('❌ Ni siquiera con click manual funciona', 'error');
+                            updateStatus('No funciona ni con click manual', 'error');
+                        }
+                    } else {
+                        log('❌ No se encontró el elemento de navegación para hacer click', 'error');
+                    }
+                } else {
+                    log('❌ No se detectó ni loader ni contenido', 'error');
+                    updateStatus('Página completamente vacía', 'error');
+                }
+                
+                // Mostrar una muestra del contenido HTML para debug
+                log('📋 Muestra del HTML:');
+                log(appContent.substring(0, 200) + '...');
+                
+            } catch (error) {
+                log(`❌ Error accediendo al contenido del iframe: ${error.message}`, 'error');
+                updateStatus('Error accediendo al contenido', 'error');
+            }
+            
+            log('🏁 Test completado');
+        }
+        
+        // Ejecutar automáticamente
+        window.addEventListener('load', () => {
+            setTimeout(runTest, 1000);
+        });
+    </script>
+</body>
+</html>

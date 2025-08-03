@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Modular FreeMarker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+        .test-card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .test-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .status { padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.testing { background: #fff3cd; color: #856404; }
+        .test-btn { background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+        .test-btn:hover { background: #0056b3; }
+        .test-result { margin-top: 10px; padding: 10px; border-radius: 4px; background: #f8f9fa; }
+        h1 { text-align: center; color: #333; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Test Modular - FreeMarker Documentation</h1>
+    
+    <div class="test-grid">
+        <!-- Home -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>🏠 Home</h3>
+                <span class="status testing" id="home-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/', 'home')">Probar Home</button>
+            <div class="test-result" id="home-result"></div>
+        </div>
+
+        <!-- Variables -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>🔤 Variables</h3>
+                <span class="status testing" id="variables-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/variables', 'variables')">Probar Variables</button>
+            <div class="test-result" id="variables-result"></div>
+        </div>
+
+        <!-- Directivas -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>🔀 Directivas</h3>
+                <span class="status testing" id="directivas-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/directivas', 'directivas')">Probar Directivas</button>
+            <div class="test-result" id="directivas-result"></div>
+        </div>
+
+        <!-- Funciones -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>⚙️ Funciones</h3>
+                <span class="status testing" id="funciones-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/funciones', 'funciones')">Probar Funciones</button>
+            <div class="test-result" id="funciones-result"></div>
+        </div>
+
+        <!-- Macros -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>🛠️ Macros</h3>
+                <span class="status testing" id="macros-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/macros', 'macros')">Probar Macros</button>
+            <div class="test-result" id="macros-result"></div>
+        </div>
+
+        <!-- Liferay -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>🏢 Liferay</h3>
+                <span class="status testing" id="liferay-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/liferay', 'liferay')">Probar Liferay</button>
+            <div class="test-result" id="liferay-result"></div>
+        </div>
+
+        <!-- Examples -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>💡 Examples</h3>
+                <span class="status testing" id="examples-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/examples', 'examples')">Probar Examples</button>
+            <div class="test-result" id="examples-result"></div>
+        </div>
+
+        <!-- Playground -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>🎮 Playground</h3>
+                <span class="status testing" id="playground-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testRoute('/playground', 'playground')">Probar Playground</button>
+            <div class="test-result" id="playground-result"></div>
+        </div>
+
+        <!-- Backend API -->
+        <div class="test-card">
+            <div class="test-header">
+                <h3>🔌 Backend API</h3>
+                <span class="status testing" id="api-status">Sin probar</span>
+            </div>
+            <button class="test-btn" onclick="testAPI()">Probar API</button>
+            <div class="test-result" id="api-result"></div>
+        </div>
+    </div>
+
+    <div style="margin-top: 30px; text-align: center;">
+        <button class="test-btn" onclick="testAll()" style="background: #28a745; padding: 15px 30px; font-size: 16px;">
+            🚀 Probar Todo
+        </button>
+    </div>
+
+    <script>
+        async function testRoute(route, moduleId) {
+            const status = document.getElementById(moduleId + '-status');
+            const result = document.getElementById(moduleId + '-result');
+            
+            status.textContent = 'Probando...';
+            status.className = 'status testing';
+            
+            try {
+                const response = await fetch('http://localhost:3000' + route);
+                const content = await response.text();
+                
+                if (response.ok && content.includes('app')) {
+                    status.textContent = '✅ Funcionando';
+                    status.className = 'status success';
+                    result.innerHTML = `<strong>✅ Éxito:</strong> Página carga correctamente (${content.length} bytes)`;
+                } else {
+                    throw new Error('Contenido no válido');
+                }
+            } catch (error) {
+                status.textContent = '❌ Error';
+                status.className = 'status error';
+                result.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function testAPI() {
+            const status = document.getElementById('api-status');
+            const result = document.getElementById('api-result');
+            
+            status.textContent = 'Probando...';
+            status.className = 'status testing';
+            
+            try {
+                // Test health
+                const healthResponse = await fetch('http://localhost:5000/api/health');
+                const healthData = await healthResponse.json();
+                
+                // Test examples
+                const examplesResponse = await fetch('http://localhost:5000/api/examples');
+                const examplesData = await examplesResponse.json();
+                
+                if (healthData.status === 'OK' && examplesData.data && Array.isArray(examplesData.data)) {
+                    status.textContent = '✅ Funcionando';
+                    status.className = 'status success';
+                    result.innerHTML = `
+                        <strong>✅ API Funcionando:</strong><br>
+                        • Health: ${healthData.status}<br>
+                        • Ejemplos: ${examplesData.data.length} disponibles<br>
+                        • CORS: Configurado correctamente
+                    `;
+                } else {
+                    throw new Error('Respuesta API inválida');
+                }
+            } catch (error) {
+                status.textContent = '❌ Error';
+                status.className = 'status error';
+                result.innerHTML = `<strong>❌ Error API:</strong> ${error.message}`;
+            }
+        }
+
+        async function testAll() {
+            const modules = ['home', 'variables', 'directivas', 'funciones', 'macros', 'liferay', 'examples', 'playground'];
+            const routes = ['/', '/variables', '/directivas', '/funciones', '/macros', '/liferay', '/examples', '/playground'];
+            
+            // Test API first
+            await testAPI();
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Test all routes
+            for (let i = 0; i < modules.length; i++) {
+                await testRoute(routes[i], modules[i]);
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+        }
+
+        // Auto-test on load
+        window.addEventListener('load', () => {
+            console.log('🔍 Iniciando tests automáticos...');
+            setTimeout(testAll, 1000);
+        });
+    </script>
+</body>
+</html>

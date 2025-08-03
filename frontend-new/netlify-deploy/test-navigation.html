@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Test Playground Navigation</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 10px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .test-button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        .test-button:hover { background: #0056b3; }
+        .success { background: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        .result { margin-top: 10px; padding: 10px; border-radius: 5px; }
+        iframe { width: 100%; height: 600px; border: 1px solid #ddd; border-radius: 5px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🧪 Test Navegación Playground</h1>
+        <p>Esta página verifica el flujo completo desde Ejemplos hasta Playground</p>
+
+        <div class="test-section">
+            <h3>🎯 Test 1: Cargar página de Ejemplos</h3>
+            <button class="test-button" onclick="testExamples()">📋 Cargar Ejemplos</button>
+            <div id="test1-result" class="result"></div>
+            <iframe id="examples-frame" style="display: none;"></iframe>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Test 2: Cargar Playground directamente</h3>
+            <button class="test-button" onclick="testPlayground()">🎮 Cargar Playground</button>
+            <div id="test2-result" class="result"></div>
+            <iframe id="playground-frame" style="display: none;"></iframe>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Test 3: Verificar Backend</h3>
+            <button class="test-button" onclick="testBackend()">🔧 Test Backend</button>
+            <div id="test3-result" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🎯 Test 4: Test Router Navigation</h3>
+            <button class="test-button" onclick="testNavigation()">🧭 Test Navegación</button>
+            <div id="test4-result" class="result"></div>
+        </div>
+    </div>
+
+    <script>
+        async function testExamples() {
+            const resultDiv = document.getElementById('test1-result');
+            const iframe = document.getElementById('examples-frame');
+            
+            resultDiv.innerHTML = '🔄 Cargando página de ejemplos...';
+            resultDiv.className = 'result info';
+            
+            try {
+                iframe.src = 'http://localhost:3000/ejemplos';
+                iframe.style.display = 'block';
+                
+                // Esperar a que cargue
+                await new Promise(resolve => {
+                    iframe.onload = () => {
+                        setTimeout(resolve, 2000); // Esperar 2 segundos para que cargue todo
+                    };
+                });
+                
+                resultDiv.innerHTML = '✅ Página de ejemplos cargada. Verifica que aparezcan ejemplos y botones de "Probar en Playground".';
+                resultDiv.className = 'result success';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testPlayground() {
+            const resultDiv = document.getElementById('test2-result');
+            const iframe = document.getElementById('playground-frame');
+            
+            resultDiv.innerHTML = '🔄 Cargando playground...';
+            resultDiv.className = 'result info';
+            
+            try {
+                iframe.src = 'http://localhost:3000/playground';
+                iframe.style.display = 'block';
+                
+                // Esperar a que cargue
+                await new Promise(resolve => {
+                    iframe.onload = () => {
+                        setTimeout(resolve, 2000);
+                    };
+                });
+                
+                resultDiv.innerHTML = '✅ Playground cargado. Verifica que aparezcan los editores de código y el botón "Procesar".';
+                resultDiv.className = 'result success';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testBackend() {
+            const resultDiv = document.getElementById('test3-result');
+            
+            resultDiv.innerHTML = '🔄 Verificando backend...';
+            resultDiv.className = 'result info';
+            
+            try {
+                // Test health endpoint
+                const healthResponse = await fetch('http://localhost:5000/api/health');
+                const healthData = await healthResponse.json();
+                
+                // Test examples endpoint
+                const examplesResponse = await fetch('http://localhost:5000/api/examples');
+                const examplesData = await examplesResponse.json();
+                
+                resultDiv.innerHTML = `
+                    ✅ Backend funcionando correctamente:<br>
+                    • Health: ${healthData.status}<br>
+                    • Ejemplos: ${examplesData.data ? examplesData.data.length : 0} ejemplos disponibles
+                `;
+                resultDiv.className = 'result success';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error conectando con backend: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        async function testNavigation() {
+            const resultDiv = document.getElementById('test4-result');
+            
+            resultDiv.innerHTML = '🔄 Verificando navegación...';
+            resultDiv.className = 'result info';
+            
+            try {
+                // Test diferentes rutas
+                const routes = ['/', '/ejemplos', '/examples', '/playground', '/sintaxis'];
+                const results = [];
+                
+                for (const route of routes) {
+                    try {
+                        const response = await fetch(`http://localhost:3000${route}`);
+                        const text = await response.text();
+                        const hasApp = text.includes('<div id="app">');
+                        const hasScript = text.includes('app.js');
+                        
+                        results.push(`${route}: ${hasApp && hasScript ? '✅' : '❌'}`);
+                    } catch (error) {
+                        results.push(`${route}: ❌ Error`);
+                    }
+                }
+                
+                resultDiv.innerHTML = `
+                    📊 Resultados de navegación:<br>
+                    ${results.join('<br>')}
+                `;
+                resultDiv.className = 'result success';
+                
+            } catch (error) {
+                resultDiv.innerHTML = `❌ Error en test de navegación: ${error.message}`;
+                resultDiv.className = 'result error';
+            }
+        }
+
+        // Auto-ejecutar tests al cargar
+        window.addEventListener('load', () => {
+            console.log('🎯 Test de navegación iniciado');
+            setTimeout(() => {
+                testBackend();
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
